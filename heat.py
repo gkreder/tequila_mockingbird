@@ -42,8 +42,12 @@ for barcode in allele_data:
 
 # print aminotonumber_data
 # print aminotonumber_data.keys()
+y_labels = []
 sorted_aa_dict = sorted(aminotonumber_data.items(), key=operator.itemgetter(1))
-# for tup in 
-print sorted_aa_dict
+for cod, index in sorted_aa_dict:
+	y_labels.append(cod)
+
+print y_labels
+# print sorted_aa_dict
 
 

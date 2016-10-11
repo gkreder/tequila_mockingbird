@@ -76,29 +76,35 @@ def segment_DAPI(img):
 
 
 	# plt.imshow(segmentation, cmap = plt.cm.gray) 
-	plt.imshow(img, cmap = plt.cm.gray)
-	plt.contour(segmentation, [0.5], linewidths=1.2, colors='y')
-	plt.show()
+	# plt.imshow(img, cmap = plt.cm.gray)
+	# plt.contour(segmentation, [0.5], linewidths=1.2, colors='y')
+	# plt.show()
 
 	return labeled_img, num_objects
 
 def find_nuclei(img, dapi_cells):
 
-
-
 	# ------------------------------------------------------------
 	# Total Image Maxima
 	# ------------------------------------------------------------
-	# img = skimage.img_as_float(img)
-	# local_peaks = skimage.feature.peak_local_max(img, min_distance = 20, threshold_abs = 0.1)
-	# # print local_peaks
-	# blank_image = np.zeros_like(img)
-	# for row, column in local_peaks:
-	# 	blank_image[row, column] = 1
+	img = skimage.img_as_float(img)
+	# local_peaks = skimage.feature.peak_local_max(img, min_distance = 10, threshold_abs = 0.1)
+	local_peaks = skimage.feature.peak_local_max(img, min_distance = 10)
+	# print local_peaks
+	nuclei_image = np.zeros_like(img)
+	nuclei = []
+	for row, column in local_peaks:
+		nuclei_image[row, column] = 1
+		nuclei.append([row, column])
+
+	nuclei_image = nuclei_image * dapi_cells
 
 	# plt.imshow(img, cmap=plt.cm.gray, interpolation='nearest')
-	# plt.contour(blank_image, [0.5], linewidths=1.2, colors='y')
+	# plt.contour(nuclei_image, [0.5], linewidths=1.2, colors='y')
 	# plt.contour(dapi_cells, [0.5], linewidths=1.2, colors='y')
+	# plt.imshow(nuclei_image, cmap = plt.cm.gray)
+	# plt.show()
+	# print nuclei
 	# ------------------------------------------------------------
 
 
@@ -106,22 +112,23 @@ def find_nuclei(img, dapi_cells):
 	# ----------------------------------------------------------------
 	# Single cell masking
 	# ----------------------------------------------------------------
-	object_labels = get_object_labels(dapi_cells)	
-	nuclei_labeled = []
-	nuclei = []
-	for label in object_labels:
-	# label = 500
-		masked_image = np.zeros_like(dapi_cells)
-		img_copy = np.copy(img)
-		img_copy[dapi_cells != label] = 0
-		local_peaks = skimage.feature.peak_local_max(img_copy, num_peaks = 1)
-		if len(local_peaks) > 0:
-			peak_row, peak_column = local_peaks[0]
-			nuclei_labeled.append(([peak_row, peak_column], label))
-			# img[peak_row, peak_column] = 0.0
+	# object_labels = get_object_labels(dapi_cells)	
+	# nuclei_labeled = []
+	# nuclei = []
+	# for label in object_labels:
+	# # label = 500
+	# 	masked_image = np.zeros_like(dapi_cells)
+	# 	img_copy = np.copy(img)
+	# 	img_copy[dapi_cells != label] = 0
+	# 	local_peaks = skimage.feature.peak_local_max(img_copy, num_peaks = 1)
+	# 	if len(local_peaks) > 0:
+	# 		peak_row, peak_column = local_peaks[0]
+	# 		nuclei_labeled.append(([peak_row, peak_column], label))
+	# 		nucleu.append([peak_row, peak_column])
+	# 		# img[peak_row, peak_column] = 0.0
 
-	# plt.imshow(img, cmap=plt.cm.gray, interpolation='nearest')
-	# plt.show()
+	# # plt.imshow(img, cmap=plt.cm.gray, interpolation='nearest')
+	# # plt.show()
 	# ----------------------------------------------------------------
 
 	# masked_image[dapi_cells == label] = 1
@@ -141,7 +148,7 @@ def find_nuclei(img, dapi_cells):
 
 
 	# plt.imshow(img_copy, cmap = plt.cm.gray)
-	return nuclei_labeled
+	return nuclei
 
 
 
@@ -157,13 +164,13 @@ def get_object_labels(labeled_img):
 # ------------------------------------------------
 # DAPI Segmentation
 # ------------------------------------------------
-IMAGE_NAME = '/Plate000_WellA12_Seq0011C1XY1.tif'
-im_path = IMAGE_DIR + IMAGE_NAME
-im = scipy.misc.imread(im_path)
-# print im
-labeled_img, num_objects = segment_DAPI(im)
-# plt.imshow(labeled_img)
-# plt.show()
+# IMAGE_NAME = '/Plate000_WellA12_Seq0011C1XY1.tif'
+# im_path = IMAGE_DIR + IMAGE_NAME
+# im = scipy.misc.imread(im_path)
+# # print im
+# labeled_img, num_objects = segment_DAPI(im)
+# # plt.imshow(labeled_img)
+# # plt.show()
 # ------------------------------------------------
 # ------------------------------------------------
 
@@ -184,14 +191,14 @@ labeled_img, num_objects = segment_DAPI(im)
 # ------------------------------------------------
 # Find nuclei
 # ------------------------------------------------
-# IMAGE_NAME = '/Plate000_WellA12_Seq0011C1XY1.tif'
-# im_path = IMAGE_DIR + IMAGE_NAME
-# im = scipy.misc.imread(im_path)
-# labeled_img, num_objects = segment_DAPI(im)
-# # print im
-# find_nuclei(im, labeled_img)
-# # # plt.imshow(labeled_img)
-# # # plt.show()
+IMAGE_NAME = '/Plate000_WellA12_Seq0011C1XY1.tif'
+im_path = IMAGE_DIR + IMAGE_NAME
+im = scipy.misc.imread(im_path)
+labeled_img, num_objects = segment_DAPI(im)
+# print im
+find_nuclei(im, labeled_img)
+# # plt.imshow(labeled_img)
+# # plt.show()
 # ------------------------------------------------
 # ------------------------------------------------
 

@@ -2,8 +2,10 @@ import pickle
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
-
-fitness_scores = pickle.load(open('fitness_scores.pkl', 'r'))
+import sys
+arg,arg1 = sys.argv
+FILE = arg1
+fitness_scores = pickle.load(open(FILE, 'r'))
 
 # test_data = [{'A' : (0.1 , 0.1, 0.2, 0.15), 'V' : (0.4, 0.4, 0.5, 0.45)}, {'A' : (0.4, 0.2, 0.3, 0.25), 'V' : (0.4, 0.5, 0.6, 0.55)}]
 
@@ -15,6 +17,6 @@ for position in fitness_scores:
 		value = position[aa]
 		averageposition_dict[aa] = value[3] - value[0]
 	averagefitnessdata_list.append(averageposition_dict)
-
+plt.figure(figsize=[20,8])
 sns.heatmap(pd.DataFrame(averagefitnessdata_list).T)
 plt.show()

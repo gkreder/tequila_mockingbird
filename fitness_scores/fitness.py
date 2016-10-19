@@ -138,7 +138,7 @@ for (loc, AA, is_WT) in data_dict:
 		slope_r2, intercept_r2, r_value_r2, p_value_r2, std_err_r2  = scipy.stats.linregress(temp_x_r2, temp_y_r2)
 		slope_control, intercept_control, r_value_control, p_value_control, std_err_control  = scipy.stats.linregress(temp_x_control, temp_y_control)
 
-		std_err_avg = (std_err_r1 + std_err_r2 + std_err_control) / 3.0
+		std_err_avg = (std_err_r1 + std_err_r2) / 2.0
 
 		fitness_r1 = slope_r1 - slope_r1_WT
 		fitness_r2 = slope_r2 - slope_r2_WT

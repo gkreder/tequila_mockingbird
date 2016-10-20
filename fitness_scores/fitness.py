@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 import scipy.stats
+import matplotlib.pyplot as plt
+import seaborn
 
 # index_list = ['ATCAGT','GCTCAT','AGGAAT','CTTTTG','TAGTTG','CCGGTG','ATTCCG','AGCTAG','GTATAG']
 
@@ -41,7 +43,9 @@ filename_list = ['t0_r1_allele_count.pkl',
 
 data_dict = {}
 data_dict_wildtype = {}
+counts = {}
 for f in filename_list:
+	counts[f] = []
 	time_point = f.replace('_allele_count.pkl', '')
 	current_dict = pickle.load(open(f, 'rb'))
 
@@ -64,9 +68,21 @@ for f in filename_list:
 		tup_AA = (loc, AA, is_WT)
 		if tup_AA not in data_dict:
 			data_dict[tup_AA] = {}
-		data_dict[tup_AA][time_point] = np.log(5000.0 * (current_dict[tup] / float(time_point_sum)))
+
+
+		counts[f].append(current_dict[tup])
+		if current_dict[tup] > 10:
+			data_dict[tup_AA][time_point] = np.log(5000.0 * (current_dict[tup] / float(time_point_sum)))
+
 		
+# Plotting count values
+# for f in filename_list:
+# 	# , range=[0,500]
+# 	plt.hist(np.log(counts[f]),bins=30)
+# 	plt.title(f + 'str(log scale)')
+# 	plt.show()
 # print data_dict
+
 for (loc, AA, is_WT) in data_dict:
 	if is_WT:
 		perturb_tups_r1 = []
@@ -115,42 +131,44 @@ for (loc, AA, is_WT) in data_dict:
 	perturb_tups_sorted_r1 = sorted(perturb_tups_r1, key = lambda tup: tup[0])
 	perturb_tups_sorted_r2 = sorted(perturb_tups_r2, key = lambda tup: tup[0])
 	control_tups_sorted = sorted(control_tups, key = lambda tup: tup[0])
-	min_len = np.amin([len(perturb_tups_r1), len(perturb_tups_r2), len(control_tups_sorted)])
-	if min_len == 3:
-		temp_x_control = [tup[0] for tup in control_tups_sorted]
-		temp_y_control = [tup[1] for tup in control_tups_sorted]
+	min_len = np.amin([len(perturb_tups_sorted_r1), len(perturb_tups_sorted_r2), len(control_tups_sorted)])
+	max_len = np.amax([len(perturb_tups_sorted_r1), len(perturb_tups_sorted_r2), len(control_tups_sorted)])
+	r1_len = len(perturb_tups_sorted_r1)
+	r2_len = len(perturb_tups_sorted_r2)
+	control_len = len(control_tups_sorted)
+
+	fitness_r1 = 0.0
+	fitness_r2 = 0.0
+	fitness_control = float('nan')
+	std_err_r1 = 0.0
+	std_err_r2 = 0.0
+
+	if r1_len > 1:
 		temp_x_r1 = [tup[0] for tup in perturb_tups_sorted_r1]
 		temp_y_r1 = [tup[1] for tup in perturb_tups_sorted_r1]
+		slope_r1, intercept_r1, r_value_r1, p_value_r1, std_err_r1 = scipy.stats.linregress(temp_x_r1, temp_y_r1)
+		fitness_r1 = slope_r1 - slope_r1_WT
+
+	if r2_len > 1:
 		temp_x_r2 = [tup[0] for tup in perturb_tups_sorted_r2]
 		temp_y_r2 = [tup[1] for tup in perturb_tups_sorted_r2]
-
-		# temp_y_control = temp_y_control / WT_y_control
-		# temp_y_r1 = temp_y_r1 / WT_y_r1
-		# temp_y_r2 = temp_y_r2 / WT_y_r2
-
-
-
-		# slope_r1 = np.polyfit(temp_x_r1, temp_y_r1, 1)[0]
-		# slope_r2 = np.polyfit(temp_x_r2, temp_y_r2, 1)[0]
-		# slope_control = np.polyfit(temp_x_control, temp_y_control, 1)[0]
-
-		slope_r1, intercept_r1, r_value_r1, p_value_r1, std_err_r1 = scipy.stats.linregress(temp_x_r1, temp_y_r1)
 		slope_r2, intercept_r2, r_value_r2, p_value_r2, std_err_r2  = scipy.stats.linregress(temp_x_r2, temp_y_r2)
-		slope_control, intercept_control, r_value_control, p_value_control, std_err_control  = scipy.stats.linregress(temp_x_control, temp_y_control)
-
-		std_err_avg = (std_err_r1 + std_err_r2) / 2.0
-
-		fitness_r1 = slope_r1 - slope_r1_WT
 		fitness_r2 = slope_r2 - slope_r2_WT
+
+	if control_len > 1:
+		temp_x_control = [tup[0] for tup in control_tups_sorted]
+		temp_y_control = [tup[1] for tup in control_tups_sorted]
+		slope_control, intercept_control, r_value_control, p_value_control, std_err_control  = scipy.stats.linregress(temp_x_control, temp_y_control)
 		fitness_control = slope_control - slope_control_WT
-		fitness_average = (fitness_r1 + fitness_r2) / 2.0
 
-		# print loc
-		fitness_scores[loc - 1][AA] = (fitness_control, fitness_r1, fitness_r2, fitness_average, std_err_avg)
-
-		# slope_dict[(loc, AA, is_WT)] = (slope_control, slope_r1, slope_r2)
-		# r1_fitness = 
-		# slope_dict[(loc, AA, is_WT)] = (float(slope_r1) / float(slope_control), float(slope_r2) / float(slope_control))
+	num_nans = float(2.0 - np.count_nonzero([fitness_r1, fitness_r2]))
+	if num_nans == 0.0:
+		num_nans = 2.0
+	elif num_nans == 2.0:
+		num_nans = float('nan')
+	fitness_average = (fitness_r1 + fitness_r2) / num_nans
+	std_err_avg = (std_err_r1 + std_err_r2) / num_nans
+	fitness_scores[loc - 1][AA] = (fitness_control, fitness_r1, fitness_r2, fitness_average, std_err_avg)
 
 
 pickle.dump(fitness_scores, open( "fitness_scores.pkl", "wb"))
